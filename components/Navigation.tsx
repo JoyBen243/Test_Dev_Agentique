@@ -3,11 +3,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Settings, ListTodo } from "lucide-react"
 
+import { useSettingsStore } from "@/store/useSettingsStore"
+
 export function Navigation() {
   const pathname = usePathname()
+  const isOnboarded = useSettingsStore((state) => state.isOnboarded)
   
-  // On masque la barre de navigation sur les pages d'accueil et d'onboarding
-  if (pathname === '/' || pathname === '/onboarding') {
+  // On masque la barre de navigation sur les pages d'accueil, d'onboarding, ou si l'onboarding n'est pas complété
+  if (pathname === '/' || pathname === '/onboarding' || !isOnboarded) {
     return null
   }
 

@@ -2,7 +2,9 @@
 import * as React from "react"
 import { Drawer } from "vaul"
 import { Plus, X, MapPin, AlignLeft, Clock, AlertTriangle, Calendar } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useProgramStore } from "@/store/useProgramStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -25,6 +27,7 @@ export function CreateProgramDrawer({
 }: {
   trigger?: React.ReactNode
 }) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = React.useState(false)
   const addProgram = useProgramStore((state) => state.addProgram)
   const refreshStatuses = useProgramStore((state) => state.refreshStatuses)
@@ -84,6 +87,13 @@ export function CreateProgramDrawer({
 
     reset()
     setIsOpen(false)
+
+    // Vérifier si l'utilisateur est en cours d'onboarding
+    const { isOnboarded, setOnboardingStep } = useSettingsStore.getState()
+    if (!isOnboarded) {
+      setOnboardingStep('MANDATORY_SETTINGS')
+      router.push('/settings?onboarding=true')
+    }
   }
 
   return (

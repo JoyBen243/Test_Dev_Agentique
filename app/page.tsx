@@ -1,26 +1,31 @@
 "use client"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Watch } from "lucide-react"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
 export default function RootPage() {
   const router = useRouter()
+  const isOnboarded = useSettingsStore((state) => state.isOnboarded)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Redirection intelligente temporaire
-    // Plus tard, nous lirons useSettingsStore pour savoir si l'onboarding est terminé.
-    const isFirstTime = true // À lier avec Zustand par la suite
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
 
     const timer = setTimeout(() => {
-      if (isFirstTime) {
+      if (!isOnboarded) {
         router.push('/onboarding')
       } else {
         router.push('/dashboard')
       }
-    }, 1500) // Petit délai pour montrer l'écran de lancement (Splash screen)
+    }, 1200)
 
     return () => clearTimeout(timer)
-  }, [router])
+  }, [router, isOnboarded, mounted])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white">
