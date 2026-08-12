@@ -9,3 +9,28 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
+model Program {
+  id          String   @id @default(cuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  description String?
+  priority    String   // 'BASSE', 'MOYENNE', 'HAUTE'
+  status      String   @default("EN_ATTENTE") // 'EN_ATTENTE', 'EN_COURS', 'FAIT', 'EN_OBSERVATION', 'REPORTE', 'ABANDONNE'
+  originalId  String?  // Lien vers le programme original en cas de report
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Settings {
+  id           String   @id @default(cuid())
+  tone         String   @default("MASCULIN") // 'MASCULIN', 'FEMININ'
+  title        String   @default("Mr")       // 'Mr', 'Mme', 'Mlle'
+  audioEnabled Boolean  @default(true)
+  language     String   @default("FR")       // 'FR', 'EN', 'SW'
+  theme        String   @default("CLAIR")    // 'CLAIR', 'SOMBRE'
+  viewType     String   @default("GRILLE")   // 'GRILLE', 'LISTE'
+  updatedAt    DateTime @updatedAt
+}
