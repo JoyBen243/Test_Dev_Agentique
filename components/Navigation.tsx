@@ -4,10 +4,13 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Settings, ListTodo } from "lucide-react"
 
 import { useSettingsStore } from "@/store/useSettingsStore"
+import { useTranslation } from "@/lib/i18n"
 
 export function Navigation() {
   const pathname = usePathname()
   const isOnboarded = useSettingsStore((state) => state.isOnboarded)
+  const language = useSettingsStore((state) => state.settings.language)
+  const t = useTranslation(language)
   
   // On masque la barre de navigation sur les pages d'accueil, d'onboarding, ou si l'onboarding n'est pas complété
   if (pathname === '/' || pathname === '/onboarding' || !isOnboarded) {
@@ -15,9 +18,9 @@ export function Navigation() {
   }
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Programmes", href: "/programmes", icon: ListTodo },
-    { name: "Paramètres", href: "/settings", icon: Settings },
+    { name: t("nav_dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { name: t("nav_programmes"), href: "/programmes", icon: ListTodo },
+    { name: t("nav_settings"), href: "/settings", icon: Settings },
   ]
 
   return (
