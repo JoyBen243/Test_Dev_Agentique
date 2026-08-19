@@ -2,12 +2,19 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { soundManager } from '@/lib/audio'
 import { generateId } from '@/lib/utils'
+import { 
+  fetchProgramsAction, 
+  createProgramAction, 
+  updateProgramAction, 
+  deleteProgramAction, 
+  syncAllProgramsAction,
+  ProgramDto
+} from '@/lib/actions/programActions'
 
-// Définition de l'interface Program basée sur le schéma Prisma
 export interface Program {
   id: string
   title: string
-  startTime: Date | string // Peut être une string (ISO) venant de l'API ou localStorage
+  startTime: Date | string
   endTime: Date | string
   location: string | null
   description: string | null
@@ -23,17 +30,21 @@ interface ProgramStore {
   isLoading: boolean
   _hasHydrated: boolean
   
-  // Actions CRUD basiques
+  // Actions CRUD
   setPrograms: (programs: Program[]) => void
   addProgram: (program: Program) => void
   updateProgram: (id: string, updates: Partial<Program>) => void
   deleteProgram: (id: string) => void
   
-  // Actions métier interactives (Option 3)
+  // Actions métier interactives
   markAsDone: (id: string) => void
   abandonProgram: (id: string) => void
   postponeProgram: (id: string, newStartTime: Date | string, newEndTime: Date | string) => void
   
+  // Synchronisation avec la base SQLite
+  loadFromDatabase: () => Promise<void>
+  syncToDatabase: () => Promise<void>
+
   // Action de rafraîchissement & Audio
   refreshStatuses: () => void
   setLoading: (loading: boolean) => void
@@ -47,42 +58,78 @@ export const useProgramStore = create<ProgramStore>()(
       isLoading: false,
       _hasHydrated: false,
       
-      // Remplacer toute la liste (chargement initial)
+      // Remplacer toute la liste
       setPrograms: (programs) => set({ programs, isLoading: false }),
       
+      // Charger les programmes depuis SQLite
+      loadFromDatabase: async () => {
+        try {
+          const dbPrograms = await fetchProgramsAction()
+          if (dbPrograms && dbPrograms.length > 0) {
+            set({ programs: dbPrograms as Program[], isLoading: false })
+          } else if (get().programs.length > 0) {
+            await syncAllProgramsAction(get().programs as any)
+          }
+        } catch (err) {
+          console.error("Impossible de charger depuis SQLite:", err)
+        }
+      },
+
+      // Synchroniser tous les programmes locaux vers SQLite
+      syncToDatabase: async () => {
+        try {
+          await syncAllProgramsAction(get().programs as any)
+        } catch (err) {
+          console.error("Erreur syncToDatabase:", err)
+        }
+      },
+
       // Ajouter un programme
-      addProgram: (program) => set((state) => ({ 
-        programs: [...state.programs, program] 
-      })),
+      addProgram: (program) => {
+        set((state) => ({ 
+          programs: [...state.programs, program] 
+        }))
+        createProgramAction(program as any).catch(console.error)
+      },
       
       // Mettre à jour un programme existant
-      updateProgram: (id, updates) => set((state) => ({
-        programs: state.programs.map((p) => (p.id === id ? { ...p, ...updates } : p))
-      })),
+      updateProgram: (id, updates) => {
+        set((state) => ({
+          programs: state.programs.map((p) => (p.id === id ? { ...p, ...updates } : p))
+        }))
+        updateProgramAction(id, updates as any).catch(console.error)
+      },
       
       // Supprimer un programme
-      deleteProgram: (id) => set((state) => ({
-        programs: state.programs.filter((p) => p.id !== id)
-      })),
+      deleteProgram: (id) => {
+        set((state) => ({
+          programs: state.programs.filter((p) => p.id !== id)
+        }))
+        deleteProgramAction(id).catch(console.error)
+      },
 
       // Marquer comme FAIT
       markAsDone: (id) => {
         soundManager.playSuccessSound()
+        const nowIso = new Date().toISOString()
         set((state) => ({
           programs: state.programs.map((p) => 
-            p.id === id ? { ...p, status: 'FAIT', updatedAt: new Date().toISOString() } : p
+            p.id === id ? { ...p, status: 'FAIT', updatedAt: nowIso } : p
           )
         }))
+        updateProgramAction(id, { status: 'FAIT', updatedAt: nowIso }).catch(console.error)
       },
 
       // Abandonner un programme
       abandonProgram: (id) => {
         soundManager.playTaskObservationSound()
+        const nowIso = new Date().toISOString()
         set((state) => ({
           programs: state.programs.map((p) => 
-            p.id === id ? { ...p, status: 'ABANDONNE', updatedAt: new Date().toISOString() } : p
+            p.id === id ? { ...p, status: 'ABANDONNE', updatedAt: nowIso } : p
           )
         }))
+        updateProgramAction(id, { status: 'ABANDONNE', updatedAt: nowIso }).catch(console.error)
       },
 
       // Reporter un programme vers une nouvelle date/heure
@@ -91,6 +138,7 @@ export const useProgramStore = create<ProgramStore>()(
         const currentProg = get().programs.find((p) => p.id === id)
         if (!currentProg) return
 
+        const nowIso = new Date().toISOString()
         const newPostponedProgram: Program = {
           id: generateId(),
           title: currentProg.title,
@@ -101,23 +149,26 @@ export const useProgramStore = create<ProgramStore>()(
           priority: currentProg.priority,
           status: 'EN_ATTENTE',
           originalId: currentProg.id,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: nowIso,
+          updatedAt: nowIso,
         }
 
         set((state) => ({
           programs: [
             ...state.programs.map((p) => 
-              p.id === id ? { ...p, status: 'REPORTE', updatedAt: new Date().toISOString() } : p
+              p.id === id ? { ...p, status: 'REPORTE', updatedAt: nowIso } : p
             ),
             newPostponedProgram,
           ]
         }))
 
+        updateProgramAction(id, { status: 'REPORTE', updatedAt: nowIso }).catch(console.error)
+        createProgramAction(newPostponedProgram as any).catch(console.error)
+
         get().refreshStatuses()
       },
 
-      // Fonction clé : Recalcul Automatique des Statuts selon l'heure & Déclenchement Audio
+      // Recalcul Automatique des Statuts selon l'heure & Déclenchement Audio
       refreshStatuses: () => {
         const now = new Date()
         let shouldPlayStart = false
@@ -125,7 +176,6 @@ export const useProgramStore = create<ProgramStore>()(
         
         set((state) => {
           const updatedPrograms = state.programs.map((program) => {
-            // Les statuts validés manuellement par l'utilisateur ne sont jamais écrasés
             if (['FAIT', 'REPORTE', 'ABANDONNE'].includes(program.status)) {
               return program
             }
@@ -134,7 +184,6 @@ export const useProgramStore = create<ProgramStore>()(
             const end = new Date(program.endTime)
             let newStatus = program.status
 
-            // Logique de temps
             if (now < start) {
               newStatus = 'EN_ATTENTE'
             } else if (now >= start && now <= end) {
@@ -150,6 +199,7 @@ export const useProgramStore = create<ProgramStore>()(
             }
 
             if (newStatus !== program.status) {
+              updateProgramAction(program.id, { status: newStatus, updatedAt: new Date().toISOString() }).catch(console.error)
               return { ...program, status: newStatus }
             }
             
@@ -175,6 +225,7 @@ export const useProgramStore = create<ProgramStore>()(
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true)
+        state?.loadFromDatabase().catch(console.error)
       },
     }
   )

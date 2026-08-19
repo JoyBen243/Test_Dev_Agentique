@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { fetchSettingsAction, updateSettingsAction } from '@/lib/actions/settingsActions'
 
 export interface Settings {
   id: string
@@ -30,6 +31,9 @@ interface SettingsStore {
   completeOnboarding: () => void
   resetOnboarding: () => void
   setHasHydrated: (state: boolean) => void
+  
+  // Persistance SQLite
+  loadSettingsFromDatabase: () => Promise<void>
 }
 
 const defaultSettings: Settings = {
@@ -46,21 +50,46 @@ const defaultSettings: Settings = {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       settings: defaultSettings,
       isLoading: false,
       isOnboarded: false,
       onboardingStep: 'SLIDES',
       _hasHydrated: false,
 
-      setSettings: (settings) => set({ settings, isLoading: false }),
-
-      updateSetting: (key, value) => set((state) => ({
-        settings: {
-          ...state.settings,
-          [key]: value
+      // Charger depuis SQLite
+      loadSettingsFromDatabase: async () => {
+        try {
+          const dbSettings = await fetchSettingsAction()
+          if (dbSettings) {
+            set((state) => ({
+              settings: {
+                ...state.settings,
+                tone: dbSettings.tone,
+                title: dbSettings.title,
+                audioEnabled: dbSettings.audioEnabled,
+                language: dbSettings.language,
+                theme: dbSettings.theme,
+                viewType: dbSettings.viewType,
+                morningReminderTime: dbSettings.morningReminderTime,
+                eveningSummaryTime: dbSettings.eveningSummaryTime,
+              }
+            }))
+          }
+        } catch (err) {
+          console.error("Erreur loadSettingsFromDatabase:", err)
         }
-      })),
+      },
+
+      setSettings: (settings) => set({ settings }),
+
+      updateSetting: (key, value) => {
+        set((state) => ({
+          settings: { ...state.settings, [key]: value },
+        }))
+        // Sauvegarde SQLite en tâche de fond
+        updateSettingsAction({ [key]: value } as any).catch(console.error)
+      },
 
       setLoading: (isLoading) => set({ isLoading }),
 
@@ -83,6 +112,7 @@ export const useSettingsStore = create<SettingsStore>()(
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true)
+        state?.loadSettingsFromDatabase().catch(console.error)
       },
     }
   )
