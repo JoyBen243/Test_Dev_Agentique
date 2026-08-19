@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { 
   Watch, 
   Plus, 
@@ -14,13 +14,15 @@ import {
   Clock,
   LayoutGrid,
   List as ListIcon,
-  Sparkles
+  Moon,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format, isSameDay, addDays, subDays } from "date-fns"
 import { CreateProgramDrawer } from "@/components/CreateProgramDrawer"
 import { PostponeProgramDrawer } from "@/components/PostponeProgramDrawer"
 import { EditProgramDrawer } from "@/components/EditProgramDrawer"
+import { EveningReviewModal } from "@/components/EveningReviewModal"
+import { MorningSummaryCard } from "@/components/MorningSummaryCard"
 import { useProgramStore } from "@/store/useProgramStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
 import { useTranslation, formatStatusTitleCase, formatLanguageDate } from "@/lib/i18n"
@@ -33,6 +35,10 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [mounted, setMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'GRILLE' | 'LISTE'>('LISTE')
+  const [showEveningModal, setShowEveningModal] = useState(false)
+  const [showMorningCard, setShowMorningCard] = useState(false)
+  const [morningDismissed, setMorningDismissed] = useState(false)
+  const [eveningTriggered, setEveningTriggered] = useState(false)
   
   const programs = useProgramStore((state) => state.programs)
   const refreshStatuses = useProgramStore((state) => state.refreshStatuses)
@@ -50,11 +56,48 @@ export default function DashboardPage() {
   useEffect(() => {
     setMounted(true)
     const interval = setInterval(() => {
-      setNow(new Date())
+      const currentTime = new Date()
+      setNow(currentTime)
       refreshStatuses()
+
+      const hours = currentTime.getHours()
+      const minutes = currentTime.getMinutes()
+
+      // ☀️ Rappel du matin : entre morningReminderTime et 7h30
+      const [morningH, morningM] = (settings.morningReminderTime || "05:15").split(":").map(Number)
+      const isMorningWindow =
+        (hours > morningH || (hours === morningH && minutes >= morningM)) &&
+        (hours < 7 || (hours === 7 && minutes <= 30))
+      if (isMorningWindow && !morningDismissed) {
+        setShowMorningCard(true)
+      } else if (!isMorningWindow) {
+        setShowMorningCard(false)
+      }
+
+      // 🌙 Bilan du soir : à partir de eveningSummaryTime
+      const [eveningH, eveningM] = (settings.eveningSummaryTime || "19:30").split(":").map(Number)
+      const isEveningTime =
+        hours > eveningH || (hours === eveningH && minutes >= eveningM)
+      if (isEveningTime && !eveningTriggered) {
+        // Vérifier s'il y a des tâches non clôturées du jour
+        const today = new Date()
+        const hasPending = programs.some((p) => {
+          const pDate = new Date(p.startTime)
+          return (
+            pDate.getFullYear() === today.getFullYear() &&
+            pDate.getMonth() === today.getMonth() &&
+            pDate.getDate() === today.getDate() &&
+            (p.status === "EN_OBSERVATION" || p.status === "EN_COURS" || p.status === "EN_ATTENTE")
+          )
+        })
+        if (hasPending) {
+          setEveningTriggered(true)
+          setShowEveningModal(true)
+        }
+      }
     }, 1000)
     return () => clearInterval(interval)
-  }, [refreshStatuses])
+  }, [refreshStatuses, morningDismissed, eveningTriggered, programs, settings.morningReminderTime, settings.eveningSummaryTime])
 
   const isToday = isSameDay(selectedDate, now)
 
@@ -80,6 +123,17 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-full p-4 sm:p-6 pb-24 max-w-lg mx-auto w-full">
       
+      {/* 🌙 Bilan du Soir (Modal Overlay) */}
+      <EveningReviewModal
+        isOpen={showEveningModal}
+        onClose={() => setShowEveningModal(false)}
+      />
+
+      {/* ☀️ Rappel du Matin (Bannière) */}
+      {showMorningCard && (
+        <MorningSummaryCard onDismiss={() => { setShowMorningCard(false); setMorningDismissed(true) }} />
+      )}
+
       {/* En-tête avec Horloge en direct */}
       <header className="flex items-center justify-between mb-4 mt-1">
         <div>
@@ -155,9 +209,23 @@ export default function DashboardPage() {
 
       {/* En-tête des Tâches & Commutateur de Mode (Grille/Liste) sur Dashboard */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-          {t("planned_tasks")} <span className="text-slate-400 font-medium">({filteredPrograms.length})</span>
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+            {t("planned_tasks")} <span className="text-slate-400 font-medium">({filteredPrograms.length})</span>
+          </h2>
+
+          {/* Bouton manuel Bilan du Soir (visible uniquement aujourd'hui si des tâches sont non clôturées) */}
+          {isToday && filteredPrograms.some(p => ['EN_OBSERVATION', 'EN_COURS', 'EN_ATTENTE'].includes(p.status)) && (
+            <button
+              onClick={() => setShowEveningModal(true)}
+              className="flex items-center gap-1 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 transition-all active:scale-95"
+              title={t("evening_summary")}
+            >
+              <Moon className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold hidden sm:inline">{t("evening_summary")}</span>
+            </button>
+          )}
+        </div>
 
         <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
           <button

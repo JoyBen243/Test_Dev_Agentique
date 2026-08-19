@@ -1,4 +1,4 @@
-﻿// Système d'Internationalisation (i18n) 100% hors-ligne pour My_MudaPlan (FR, EN, SW)
+// Système d'Internationalisation (i18n) 100% hors-ligne pour My_MudaPlan (FR, EN, SW)
 
 export type SupportedLanguage = 'FR' | 'EN' | 'SW'
 
@@ -58,6 +58,23 @@ export const translations = {
     no_programs_date: "Aucun programme prévu pour cette date.",
     no_programs_title: "Aucun programme",
     planned_tasks: "Tâches prévues",
+
+    // Bilan du Soir
+    evening_pending: "À traiter",
+    evening_pending_label: "Tâches non clôturées",
+    evening_all_done: "Excellente journée !",
+    evening_all_done_desc: "Toutes vos tâches ont été traitées. Bonne nuit !",
+    evening_close: "Fermer le bilan",
+
+    // Rappel du Matin
+    morning_greeting_m: "Bonjour",
+    morning_greeting_f: "Bonjour",
+    morning_you_have: "vous avez",
+    morning_tasks_today: "tâche(s) prévue(s) aujourd'hui.",
+    morning_no_tasks: "aucune tâche prévue aujourd'hui.",
+    morning_total_tasks: "Total",
+    morning_first_task: "Première tâche",
+    morning_lets_go: "C'est parti !",
 
     // Page Programmes
     programs_title: "Tous les programmes",
@@ -176,6 +193,23 @@ export const translations = {
     no_programs_title: "No schedules",
     planned_tasks: "Planned tasks",
 
+    // Evening Review
+    evening_pending: "To handle",
+    evening_pending_label: "Unfinished tasks",
+    evening_all_done: "Great day!",
+    evening_all_done_desc: "All your tasks have been handled. Good night!",
+    evening_close: "Close review",
+
+    // Morning Reminder
+    morning_greeting_m: "Good morning",
+    morning_greeting_f: "Good morning",
+    morning_you_have: "you have",
+    morning_tasks_today: "task(s) planned for today.",
+    morning_no_tasks: "no tasks planned for today.",
+    morning_total_tasks: "Total",
+    morning_first_task: "First task",
+    morning_lets_go: "Let's go!",
+
     // Page Programmes
     programs_title: "All schedules",
     view_grid: "Grid",
@@ -292,6 +326,23 @@ export const translations = {
     no_programs_date: "Hakuna ratiba iliyopangwa kwa tarehe hii.",
     no_programs_title: "Hakuna ratiba",
     planned_tasks: "Ratiba zilizopangwa",
+
+    // Tathmini ya Jioni
+    evening_pending: "Kushughulika",
+    evening_pending_label: "Ratiba ambazo hazijafungwa",
+    evening_all_done: "Siku nzuri sana!",
+    evening_all_done_desc: "Ratiba zako zote zimeshughulikiwa. Lala salama!",
+    evening_close: "Funga tathmini",
+
+    // Kikumbusho cha Asubuhi
+    morning_greeting_m: "Habari za asubuhi",
+    morning_greeting_f: "Habari za asubuhi",
+    morning_you_have: "una",
+    morning_tasks_today: "ratiba leo.",
+    morning_no_tasks: "hakuna ratiba leo.",
+    morning_total_tasks: "Jumla",
+    morning_first_task: "Ratiba ya kwanza",
+    morning_lets_go: "Twende!",
 
     // Page Programmes
     programs_title: "Ratiba zote",
