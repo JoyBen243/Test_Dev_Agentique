@@ -8,6 +8,7 @@ import { useSettingsStore } from "@/store/useSettingsStore"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { generateId } from "@/lib/utils"
 
 const programSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
@@ -71,7 +72,7 @@ export function CreateProgramDrawer({
     const finalEnd = isNaN(parsedEnd.getTime()) ? new Date(new Date().getTime() + 3600000) : parsedEnd
 
     const newProgram = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       title: data.title,
       startTime: finalStart,
       endTime: finalEnd,
