@@ -35,11 +35,11 @@ export default function DashboardPage() {
   todayPrograms.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
   return (
-    <div className="flex flex-col min-h-full p-6 pb-24">
+    <div className="flex flex-col min-h-full p-4 sm:p-6 pb-24">
       {/* En-tête avec horloge */}
-      <header className="flex items-center justify-between mb-8 mt-4">
+      <header className="flex items-center justify-between mb-6 mt-2">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Aujourd'hui</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">Aujourd'hui</h1>
           {mounted ? (
             <>
               <p className="text-slate-500 dark:text-slate-400 font-medium capitalize">

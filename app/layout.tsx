@@ -1,5 +1,4 @@
-import "./globals.css";
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -9,7 +8,15 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "My_MudaPlan",
-  description: "Application de gestion de vie offline-first",
+  description: "Application de gestion d'agenda offline-first",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -19,16 +26,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.className} bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased`}>
+      <body className={`${inter.className} bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased overflow-x-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {/* Conteneur principal simulant un écran de smartphone sur Desktop */}
-          <div className="flex flex-col min-h-screen pb-16">
-            <main className="flex-1 w-full max-w-md mx-auto relative shadow-2xl bg-white dark:bg-slate-950 overflow-x-hidden">
+          {/* Conteneur principal mobile-first centré sur grand écran */}
+          <div className="flex flex-col min-h-[100dvh]">
+            <main className="flex-1 w-full max-w-md mx-auto relative shadow-2xl bg-white dark:bg-slate-950 overflow-x-hidden flex flex-col">
               {children}
             </main>
             

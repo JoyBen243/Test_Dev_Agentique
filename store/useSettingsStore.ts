@@ -9,6 +9,8 @@ export interface Settings {
   language: string
   theme: string
   viewType: string
+  morningReminderTime: string
+  eveningSummaryTime: string
 }
 
 export type OnboardingStep = 'SLIDES' | 'FIRST_PROGRAM' | 'MANDATORY_SETTINGS' | 'COMPLETED'
@@ -18,6 +20,7 @@ interface SettingsStore {
   isLoading: boolean
   isOnboarded: boolean
   onboardingStep: OnboardingStep
+  _hasHydrated: boolean
   
   // Actions pour modifier l'état local
   setSettings: (settings: Settings) => void
@@ -26,6 +29,7 @@ interface SettingsStore {
   setOnboardingStep: (step: OnboardingStep) => void
   completeOnboarding: () => void
   resetOnboarding: () => void
+  setHasHydrated: (state: boolean) => void
 }
 
 const defaultSettings: Settings = {
@@ -36,6 +40,8 @@ const defaultSettings: Settings = {
   language: 'FR',
   theme: 'CLAIR',
   viewType: 'GRILLE',
+  morningReminderTime: '05:15',
+  eveningSummaryTime: '19:30',
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -45,6 +51,7 @@ export const useSettingsStore = create<SettingsStore>()(
       isLoading: false,
       isOnboarded: false,
       onboardingStep: 'SLIDES',
+      _hasHydrated: false,
 
       setSettings: (settings) => set({ settings, isLoading: false }),
 
@@ -68,10 +75,15 @@ export const useSettingsStore = create<SettingsStore>()(
         isOnboarded: false, 
         onboardingStep: 'SLIDES' 
       }),
+
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'my-mudaplan-settings-storage',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
     }
   )
 )
