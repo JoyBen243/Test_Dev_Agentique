@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useState, useEffect } from "react"
 import { 
   LayoutGrid, 
@@ -69,11 +69,12 @@ export default function ProgrammesPage() {
   const gridPrograms = filteredPrograms.filter(p => isSameDay(new Date(p.startTime), selectedDate))
   gridPrograms.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
+  // Extrait uniquement les heures actives ayant des tâches (Évite les tranches vides inutilement longues)
+  const activeHours = Array.from(new Set(gridPrograms.map(p => new Date(p.startTime).getHours()))).sort((a, b) => a - b)
+
   const handlePrevDay = () => setSelectedDate(prev => subDays(prev, 1))
   const handleNextDay = () => setSelectedDate(prev => addDays(prev, 1))
   const handleToday = () => setSelectedDate(new Date())
-
-  const hours = Array.from({ length: 19 }, (_, i) => i + 5)
 
   const getStatusLabel = (status: string) => {
     const key = `status_${status}` as Parameters<typeof t>[0]
@@ -157,7 +158,7 @@ export default function ProgrammesPage() {
         </div>
       </div>
 
-      {/* Rendu 1 : MODE GRILLE */}
+      {/* Rendu 1 : MODE GRILLE INTELLIGENTE (Masque les tranches d'heures vides) */}
       {viewMode === 'GRILLE' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -205,22 +206,24 @@ export default function ProgrammesPage() {
             </button>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm relative overflow-hidden">
-            <div className="space-y-0 relative">
-              {hours.map((hour) => {
+          {gridPrograms.length === 0 ? (
+            <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <Sparkles className="w-10 h-10 text-slate-400 mx-auto" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{t("no_programs_date")}</p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-4">
+              {activeHours.map((hour) => {
                 const hourStr = String(hour).padStart(2, '0') + ':00'
-                const matchingPrograms = gridPrograms.filter(p => {
-                  const pStart = new Date(p.startTime)
-                  return pStart.getHours() === hour
-                })
+                const matchingPrograms = gridPrograms.filter(p => new Date(p.startTime).getHours() === hour)
 
                 return (
-                  <div key={hour} className="flex gap-3 min-h-[64px] border-b border-slate-100 dark:border-slate-800/80 relative">
-                    <div className="w-12 text-[11px] font-bold text-slate-400 tabular-nums pt-1 border-r border-slate-100 dark:border-slate-800/60 pr-2 flex items-start justify-end">
+                  <div key={hour} className="flex gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80 last:border-0 last:pb-0">
+                    <div className="w-14 text-xs font-black text-indigo-600 dark:text-indigo-400 tabular-nums pt-1 border-r border-slate-100 dark:border-slate-800/60 pr-2 flex items-start justify-end">
                       {hourStr}
                     </div>
 
-                    <div className="flex-1 py-1 space-y-2 relative">
+                    <div className="flex-1 space-y-2.5">
                       {matchingPrograms.map((prog) => {
                         const isDone = prog.status === 'FAIT'
                         const isOngoing = prog.status === 'EN_COURS'
@@ -229,17 +232,17 @@ export default function ProgrammesPage() {
                         return (
                           <div
                             key={prog.id}
-                            className={`p-3 rounded-2xl border transition-all shadow-sm ${
+                            className={`p-3.5 rounded-2xl border transition-all shadow-sm ${
                               isDone
                                 ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60'
                                 : isOngoing
-                                ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-slate-900 dark:text-white font-bold ring-2 ring-indigo-500/20'
+                                ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-500 text-slate-900 dark:text-white font-bold ring-2 ring-indigo-500/20'
                                 : isObservation
                                 ? 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
                                 : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
                               <span className="font-bold text-xs sm:text-sm">{prog.title}</span>
                               <span className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-md ${
                                 isOngoing ? 'bg-indigo-600 text-white' :
@@ -251,7 +254,7 @@ export default function ProgrammesPage() {
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-2 pt-1 border-t border-slate-100 dark:border-slate-700/50">
+                            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-700/50">
                               <div className="flex items-center gap-1 font-semibold">
                                 <Clock className="w-3 h-3 text-indigo-500" />
                                 <span>{format(new Date(prog.startTime), 'HH:mm')} - {format(new Date(prog.endTime), 'HH:mm')}</span>
@@ -279,7 +282,7 @@ export default function ProgrammesPage() {
                 )
               })}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -381,7 +384,6 @@ export default function ProgrammesPage() {
                     )}
                   </div>
 
-                  {/* Actions (Édition accessible pour TOUS les statuts) */}
                   <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
                     {!isDone && !isAbandoned && (
                       <button
@@ -409,7 +411,6 @@ export default function ProgrammesPage() {
                       </button>
                     )}
 
-                    {/* Éditeur de tâche (Toujours disponible) */}
                     <EditProgramDrawer program={program} />
 
                     <button
