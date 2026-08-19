@@ -1,229 +1,125 @@
 import { prisma } from "../lib/prisma"
 
-const mockPrograms = [
-  // 17 Août 2026 (Lundi)
-  {
-    id: "prog-20260817-1",
-    title: "Méditation & Réveil matinal",
-    startTime: new Date("2026-08-17T06:00:00"),
-    endTime: new Date("2026-08-17T07:00:00"),
-    location: "Domicile",
-    description: "Exercices de respiration et hydratation pour bien démarrer la semaine.",
-    priority: "HAUTE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260817-2",
-    title: "Revue des objectifs hebdomadaires",
-    startTime: new Date("2026-08-17T09:00:00"),
-    endTime: new Date("2026-08-17T11:30:00"),
-    location: "Bureau",
-    description: "Alignement des priorités et planification détaillée des sprints.",
-    priority: "MOYENNE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260817-3",
-    title: "Séance de sport & Cardio",
-    startTime: new Date("2026-08-17T15:00:00"),
-    endTime: new Date("2026-08-17T16:30:00"),
-    location: "Salle de Gym",
-    description: "Entraînement annulé suite à une réunion imprévue.",
-    priority: "BASSE",
-    status: "ABANDONNE",
-  },
-  {
-    id: "prog-20260817-4",
-    title: "Lecture du livre 'Atomic Habits'",
-    startTime: new Date("2026-08-17T18:00:00"),
-    endTime: new Date("2026-08-17T19:30:00"),
-    location: "Salon",
-    description: "Chapitres 3 et 4 sur les signaux d'habitude.",
-    priority: "MOYENNE",
-    status: "REPORTE",
-  },
-
-  // 18 Août 2026 (Mardi)
-  {
-    id: "prog-20260818-1",
-    title: "Briefing d'équipe & Planification",
-    startTime: new Date("2026-08-18T07:30:00"),
-    endTime: new Date("2026-08-18T08:30:00"),
-    location: "Salle de Réunion A",
-    description: "Tour de table sur les blocages et les priorités du jour.",
-    priority: "HAUTE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260818-2",
-    title: "Rendez-vous client stratégique",
-    startTime: new Date("2026-08-18T11:00:00"),
-    endTime: new Date("2026-08-18T12:30:00"),
-    location: "Centre-ville",
-    description: "Présentation des avancées et validation des jalons du contrat.",
-    priority: "HAUTE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260818-3",
-    title: "Tri des emails et archivage",
-    startTime: new Date("2026-08-18T14:30:00"),
-    endTime: new Date("2026-08-18T16:00:00"),
-    location: "Bureau",
-    description: "Nettoyage de la boîte de réception (Inbox Zero).",
-    priority: "BASSE",
-    status: "REPORTE",
-  },
-  {
-    id: "prog-20260818-4",
-    title: "Formation en ligne TypeScript & Next.js",
-    startTime: new Date("2026-08-18T17:00:00"),
-    endTime: new Date("2026-08-18T18:30:00"),
-    location: "Domicile",
-    description: "Approfondissement des Server Actions et du Server Components lifecycle.",
-    priority: "MOYENNE",
-    status: "EN_OBSERVATION",
-  },
-
-  // 19 Août 2026 (Mercredi - Aujourd'hui)
-  {
-    id: "prog-20260819-1",
-    title: "Séance de stretching & Yoga",
-    startTime: new Date("2026-08-19T06:00:00"),
-    endTime: new Date("2026-08-19T07:00:00"),
-    location: "Chambre",
-    description: "Échauffement musculaire et salutation au soleil.",
-    priority: "MOYENNE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260819-2",
-    title: "Développement du module Offline SQLite",
-    startTime: new Date("2026-08-19T09:30:00"),
-    endTime: new Date("2026-08-19T11:00:00"),
-    location: "Bureau",
-    description: "Configuration du schéma Prisma et des Server Actions hybrides.",
-    priority: "HAUTE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260819-3",
-    title: "Session de tests utilisateur mobile",
-    startTime: new Date("2026-08-19T14:00:00"),
-    endTime: new Date("2026-08-19T15:30:00"),
-    location: "Espace Coworking",
-    description: "Vérification de la réactivité sur mobile (viewport 100dvh).",
-    priority: "HAUTE",
-    status: "FAIT",
-  },
-  {
-    id: "prog-20260819-4",
-    title: "Bilan d'avancement du projet My_MudaPlan",
-    startTime: new Date("2026-08-19T18:00:00"),
-    endTime: new Date("2026-08-19T19:30:00"),
-    location: "Bureau",
-    description: "Revue complète des spécifications fonctionnelles et des statuts.",
-    priority: "HAUTE",
-    status: "EN_OBSERVATION",
-  },
-  {
-    id: "prog-20260819-5",
-    title: "Préparation de la journée du 20 Août",
-    startTime: new Date("2026-08-19T21:00:00"),
-    endTime: new Date("2026-08-19T22:30:00"),
-    location: "Bureau personnel",
-    description: "Anticipation des tâches du lendemain et validation de l'agenda.",
-    priority: "MOYENNE",
-    status: "EN_COURS",
-  },
-
-  // 20 Août 2026 (Jeudi - Demain)
-  {
-    id: "prog-20260820-1",
-    title: "Footing matinal 5km",
-    startTime: new Date("2026-08-20T06:30:00"),
-    endTime: new Date("2026-08-20T07:30:00"),
-    location: "Parc de la ville",
-    description: "Course à pied d'endurance fondamentale.",
-    priority: "MOYENNE",
-    status: "EN_ATTENTE",
-  },
-  {
-    id: "prog-20260820-2",
-    title: "Atelier de conception UI/UX V2",
-    startTime: new Date("2026-08-20T09:00:00"),
-    endTime: new Date("2026-08-20T12:00:00"),
-    location: "Salle de créativité",
-    description: "Wireframing des bilans du soir et du support natif Capacitor.",
-    priority: "HAUTE",
-    status: "EN_ATTENTE",
-  },
-  {
-    id: "prog-20260820-3",
-    title: "Appel d'évaluation trimestrielle",
-    startTime: new Date("2026-08-20T14:30:00"),
-    endTime: new Date("2026-08-20T16:00:00"),
-    location: "En ligne (Google Meet)",
-    description: "Échange sur la roadmap produit et les métriques de satisfaction.",
-    priority: "MOYENNE",
-    status: "EN_ATTENTE",
-  },
-  {
-    id: "prog-20260820-4",
-    title: "Courses et ravitaillement",
-    startTime: new Date("2026-08-20T18:00:00"),
-    endTime: new Date("2026-08-20T19:00:00"),
-    location: "Supermarché",
-    description: "Achat de produits frais pour la fin de semaine.",
-    priority: "BASSE",
-    status: "EN_ATTENTE",
-  },
-
-  // 21 Août 2026 (Vendredi)
-  {
-    id: "prog-20260821-1",
-    title: "Revue de code & Optimisation des performances",
-    startTime: new Date("2026-08-21T08:00:00"),
-    endTime: new Date("2026-08-21T09:30:00"),
-    location: "Bureau",
-    description: "Refactoring des requêtes SQLite et validation des bundles Next.js.",
-    priority: "HAUTE",
-    status: "EN_ATTENTE",
-  },
-  {
-    id: "prog-20260821-2",
-    title: "Réunion de clôture de sprint",
-    startTime: new Date("2026-08-21T11:00:00"),
-    endTime: new Date("2026-08-21T12:30:00"),
-    location: "Salle B",
-    description: "Démonstration des fonctionnalités livrées et bilan de vélocité.",
-    priority: "HAUTE",
-    status: "EN_ATTENTE",
-  },
-  {
-    id: "prog-20260821-3",
-    title: "Rétrospective hebdomadaire & Bilan personnel",
-    startTime: new Date("2026-08-21T16:00:00"),
-    endTime: new Date("2026-08-21T17:30:00"),
-    location: "Domicile",
-    description: "Synthèse des accomplissements, apprentissages et ajustements.",
-    priority: "MOYENNE",
-    status: "EN_ATTENTE",
-  },
+// Modèles de programmes réalistes
+const taskTemplates = [
+  { title: "Méditation & Réveil matinal", startHour: 6, startMin: 0, durationMin: 60, location: "Domicile", priority: "HAUTE", description: "Exercices de respiration et hydratation pour bien démarrer la journée." },
+  { title: "Séance de stretching & Yoga", startHour: 6, startMin: 30, durationMin: 45, location: "Chambre", priority: "MOYENNE", description: "Échauffement musculaire et salutation au soleil." },
+  { title: "Footing matinal 5km", startHour: 6, startMin: 30, durationMin: 60, location: "Parc de la ville", priority: "MOYENNE", description: "Course d'endurance fondamentale." },
+  { title: "Briefing d'équipe & Planification", startHour: 8, startMin: 30, durationMin: 60, location: "Salle de Réunion A", priority: "HAUTE", description: "Tour de table sur les priorités et points de blocage." },
+  { title: "Revue des objectifs & Sprint", startHour: 9, startMin: 0, durationMin: 90, location: "Bureau", priority: "HAUTE", description: "Alignement des objectifs et répartition des charges." },
+  { title: "Développement application My_MudaPlan", startHour: 10, startMin: 0, durationMin: 120, location: "Poste de travail", priority: "HAUTE", description: "Implémentation des fonctionnalités hors-ligne et responsivité." },
+  { title: "Rendez-vous client stratégique", startHour: 11, startMin: 0, durationMin: 75, location: "Centre d'affaires", priority: "HAUTE", description: "Présentation des avancées et validation des jalons." },
+  { title: "Déjeuner d'équipe & Networking", startHour: 12, startMin: 30, durationMin: 60, location: "Restaurant Le Central", priority: "BASSE", description: "Échange informel avec les partenaires." },
+  { title: "Tri des emails & Inbox Zero", startHour: 14, startMin: 0, durationMin: 45, location: "Bureau", priority: "BASSE", description: "Nettoyage des messages et traitement des urgences." },
+  { title: "Session de tests utilisateurs mobile", startHour: 14, startMin: 30, durationMin: 90, location: "Espace Coworking", priority: "HAUTE", description: "Vérification des parcours sur écran mobile." },
+  { title: "Atelier de conception UI/UX", startHour: 15, startMin: 0, durationMin: 120, location: "Salle de créativité", priority: "MOYENNE", description: "Wireframing et design system." },
+  { title: "Revue de code & Optimisation", startHour: 16, startMin: 0, durationMin: 90, location: "Bureau", priority: "HAUTE", description: "Refactoring et amélioration des performances." },
+  { title: "Formation en ligne & Veille tech", startHour: 17, startMin: 30, durationMin: 60, location: "Domicile", priority: "MOYENNE", description: "Étude des nouvelles fonctionnalités Next.js et SQLite." },
+  { title: "Séance de sport & Musculation", startHour: 18, startMin: 0, durationMin: 75, location: "Salle de Gym", priority: "MOYENNE", description: "Entraînement haut du corps et cardio." },
+  { title: "Courses & Ravitaillement", startHour: 18, startMin: 30, durationMin: 45, location: "Supermarché", priority: "BASSE", description: "Achat de produits frais pour la semaine." },
+  { title: "Lecture & Développement personnel", startHour: 19, startMin: 30, durationMin: 60, location: "Salon", priority: "MOYENNE", description: "Lecture d'un ouvrage sur la productivité et la gestion du temps." },
+  { title: "Bilan d'avancement & Clôture", startHour: 20, startMin: 30, durationMin: 45, location: "Bureau personnel", priority: "HAUTE", description: "Revue des accomplissements de la journée et préparation du lendemain." },
 ]
 
+function formatDateISO(year: number, month: number, day: number, hour: number, min: number) {
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return new Date(`${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(min)}:00`)
+}
+
 async function main() {
-  console.log("🌱 Début du remplissage de la base SQLite...")
-  
+  console.log("🌱 Début du remplissage complet de la base SQLite (Août & Septembre 2026)...")
+
+  // Nettoyer la table des programmes
   await prisma.program.deleteMany({})
 
-  for (const prog of mockPrograms) {
-    await prisma.program.create({
-      data: prog,
-    })
-    console.log("  ✓ Créé : [" + prog.status + "] " + prog.title + " (" + prog.startTime.toISOString().split('T')[0] + ")")
+  const allPrograms: any[] = []
+  const today = new Date("2026-08-20T00:00:00")
+
+  // Générer Août (1 à 31) et Septembre (1 à 30) 2026
+  const months = [
+    { month: 8, days: 31 },
+    { month: 9, days: 30 }
+  ]
+
+  let progCounter = 1
+
+  for (const m of months) {
+    for (let day = 1; day <= m.days; day++) {
+      const currentDate = new Date(`2026-${String(m.month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00`)
+      const isPast = currentDate < today
+      const isToday = currentDate.getTime() === today.getTime()
+      const isFuture = currentDate > today
+
+      // 2 à 4 programmes par jour
+      const dayHash = (m.month * 31 + day)
+      const numTasks = 2 + (dayHash % 3) // 2, 3 ou 4 tâches
+      const templateIndices = [
+        dayHash % 4, // Tâche du matin
+        4 + (dayHash % 6), // Tâche de journée
+        10 + (dayHash % 4), // Tâche d'après-midi
+        14 + (dayHash % 3), // Tâche du soir
+      ].slice(0, numTasks)
+
+      templateIndices.forEach((tplIdx, taskIdx) => {
+        const tpl = taskTemplates[tplIdx % taskTemplates.length]
+        const startTime = formatDateISO(2026, m.month, day, tpl.startHour, tpl.startMin)
+        const endTime = new Date(startTime.getTime() + tpl.durationMin * 60 * 1000)
+
+        let status = "EN_ATTENTE"
+
+        if (isPast) {
+          // Statuts passés variés et réalistes
+          const statusSeed = (day + taskIdx * 3) % 10
+          if (statusSeed < 6) {
+            status = "FAIT"
+          } else if (statusSeed < 8) {
+            status = "REPORTE"
+          } else if (statusSeed === 8) {
+            status = "ABANDONNE"
+          } else {
+            status = "EN_OBSERVATION"
+          }
+        } else if (isToday) {
+          // Aujourd'hui (20 Août)
+          if (tpl.startHour < 9) {
+            status = "FAIT"
+          } else if (tpl.startHour <= 14) {
+            status = "EN_OBSERVATION"
+          } else if (tpl.startHour <= 18) {
+            status = "EN_COURS"
+          } else {
+            status = "EN_ATTENTE"
+          }
+        } else {
+          // Dates futures : STRICTEMENT EN_ATTENTE
+          status = "EN_ATTENTE"
+        }
+
+        allPrograms.push({
+          id: `prog-2026${String(m.month).padStart(2, '0')}${String(day).padStart(2, '0')}-${taskIdx + 1}`,
+          title: tpl.title,
+          startTime,
+          endTime,
+          location: tpl.location,
+          description: tpl.description,
+          priority: tpl.priority,
+          status,
+          originalId: status === "REPORTE" ? `prog-orig-${progCounter}` : null,
+        })
+
+        progCounter++
+      })
+    }
   }
 
+  // Insertion en base par lots
+  console.log(`📦 Insertion de ${allPrograms.length} programmes au total...`)
+
+  for (const p of allPrograms) {
+    await prisma.program.create({ data: p })
+  }
+
+  // S'assurer que les Settings par défaut existent
   await prisma.settings.upsert({
     where: { id: "default-settings" },
     update: {},
@@ -240,7 +136,7 @@ async function main() {
     }
   })
 
-  console.log("\n🎉 Succès ! " + mockPrograms.length + " programmes insérés dans la base SQLite locale (dev.db).")
+  console.log(`\n🎉 Succès complet ! ${allPrograms.length} programmes insérés pour tout le mois d'Août et Septembre 2026.`)
 }
 
 main()

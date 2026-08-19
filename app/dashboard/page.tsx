@@ -215,21 +215,6 @@ export default function DashboardPage() {
             {t("planned_tasks")} <span className="text-slate-400 font-medium">({filteredPrograms.length})</span>
           </h2>
 
-          {/* Bouton manuel Rappel du Matin (accessible aujourd'hui à tout moment) */}
-          {isToday && (
-            <button
-              onClick={() => {
-                setMorningDismissed(false)
-                setShowMorningCard(true)
-              }}
-              className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50 rounded-lg text-amber-600 dark:text-amber-400 transition-all active:scale-95 shadow-sm"
-              title={t("morning_reminder")}
-            >
-              <Sun className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold hidden sm:inline">{t("morning_reminder")}</span>
-            </button>
-          )}
-
           {/* Bouton manuel Bilan du Soir (visible uniquement aujourd'hui si des tâches sont non clôturées) */}
           {isToday && filteredPrograms.some(p => ['EN_OBSERVATION', 'EN_COURS', 'EN_ATTENTE'].includes(p.status)) && (
             <button
@@ -296,27 +281,29 @@ export default function DashboardPage() {
           {/* MODE GRILLE COMPACTE (Ne montre QUE les heures qui ont des programmes) */}
           {viewMode === 'GRILLE' ? (
             <div className="space-y-4 animate-in fade-in duration-300">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-4 shadow-sm space-y-4">
                 {activeHours.map((hour) => {
                   const hourStr = String(hour).padStart(2, '0') + ':00'
                   const matchingPrograms = filteredPrograms.filter(p => new Date(p.startTime).getHours() === hour)
 
                   return (
-                    <div key={hour} className="flex gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80 last:border-0 last:pb-0">
-                      <div className="w-14 text-xs font-black text-indigo-600 dark:text-indigo-400 tabular-nums pt-1 border-r border-slate-100 dark:border-slate-800/60 pr-2 flex items-start justify-end">
+                    <div key={hour} className="flex gap-2 sm:gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80 last:border-0 last:pb-0">
+                      <div className="w-11 sm:w-14 text-[11px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 tabular-nums pt-1 border-r border-slate-100 dark:border-slate-800/60 pr-1.5 sm:pr-2 flex items-start justify-end shrink-0">
                         {hourStr}
                       </div>
 
-                      <div className="flex-1 space-y-2.5">
+                      <div className="flex-1 min-w-0 space-y-2.5">
                         {matchingPrograms.map((prog) => {
                           const isDone = prog.status === 'FAIT'
                           const isOngoing = prog.status === 'EN_COURS'
                           const isObservation = prog.status === 'EN_OBSERVATION'
+                          const isFuture = new Date(prog.startTime) > now || prog.status === 'EN_ATTENTE'
+                          const canMarkDone = !isDone && prog.status !== 'ABANDONNE' && !isFuture
 
                           return (
                             <div
                               key={prog.id}
-                              className={`p-3.5 rounded-2xl border transition-all shadow-sm ${
+                              className={`p-3 sm:p-3.5 rounded-2xl border transition-all shadow-sm ${
                                 isDone
                                   ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60'
                                   : isOngoing
@@ -326,9 +313,9 @@ export default function DashboardPage() {
                                   : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
                               }`}
                             >
-                              <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <span className="font-bold text-xs sm:text-sm">{prog.title}</span>
-                                <span className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-md ${
+                              <div className="flex items-start justify-between gap-1.5 mb-1.5">
+                                <span className="font-bold text-xs sm:text-sm truncate">{prog.title}</span>
+                                <span className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-md shrink-0 ${
                                   isOngoing ? 'bg-indigo-600 text-white' :
                                   isDone ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300' :
                                   isObservation ? 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300' :
@@ -338,14 +325,14 @@ export default function DashboardPage() {
                                 </span>
                               </div>
 
-                              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-700/50">
-                                <div className="flex items-center gap-1 font-semibold">
+                              <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-700/50">
+                                <div className="flex items-center gap-1 font-semibold text-[10px] sm:text-[11px] shrink-0">
                                   <Clock className="w-3 h-3 text-indigo-500" />
                                   <span>{format(new Date(prog.startTime), 'HH:mm')} - {format(new Date(prog.endTime), 'HH:mm')}</span>
                                 </div>
 
-                                <div className="flex items-center gap-1.5">
-                                  {!isDone && prog.status !== 'ABANDONNE' && (
+                                <div className="flex items-center gap-1 shrink-0 ml-auto">
+                                  {canMarkDone && (
                                     <button
                                       onClick={() => markAsDone(prog.id)}
                                       className="p-1 hover:bg-emerald-50 rounded text-emerald-600 transition-colors"
@@ -387,6 +374,8 @@ export default function DashboardPage() {
                 const isObservation = program.status === 'EN_OBSERVATION'
                 const isPostponed = program.status === 'REPORTE'
                 const isAbandoned = program.status === 'ABANDONNE'
+                const isFuture = new Date(program.startTime) > now || program.status === 'EN_ATTENTE'
+                const canMarkDone = !isDone && !isAbandoned && !isPostponed && !isFuture
 
                 return (
                   <div 
@@ -404,11 +393,11 @@ export default function DashboardPage() {
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-2.5 flex-1">
+                      <div className="flex items-start gap-2.5 flex-1 min-w-0">
                         <button
-                          onClick={() => !isDone && markAsDone(program.id)}
-                          disabled={isDone || isAbandoned || isPostponed}
-                          className="mt-0.5 transition-transform active:scale-90"
+                          onClick={() => canMarkDone && markAsDone(program.id)}
+                          disabled={!canMarkDone}
+                          className={`mt-0.5 transition-transform ${canMarkDone ? 'active:scale-90' : 'cursor-default'}`}
                         >
                           {isDone ? (
                             <CheckCircle2 className="w-6 h-6 text-emerald-500" />
@@ -417,12 +406,12 @@ export default function DashboardPage() {
                           ) : isObservation ? (
                             <Circle className="w-6 h-6 text-red-500 fill-red-100 dark:fill-red-950" />
                           ) : (
-                            <Circle className="w-6 h-6 text-slate-300 dark:text-slate-600 hover:text-emerald-500" />
+                            <Circle className="w-6 h-6 text-slate-300 dark:text-slate-600" />
                           )}
                         </button>
 
-                        <div className="flex-1">
-                          <h3 className={`font-bold text-base leading-snug ${isDone || isAbandoned ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-bold text-base leading-snug truncate ${isDone || isAbandoned ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
                             {program.title}
                           </h3>
 
@@ -435,7 +424,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider ${
+                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider shrink-0 ${
                         isOngoing ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 animate-pulse' :
                         isDone ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
                         isObservation ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' :
@@ -468,7 +457,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
-                      {!isDone && !isAbandoned && (
+                      {canMarkDone && (
                         <button
                           onClick={() => markAsDone(program.id)}
                           className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold transition-all active:scale-95"
