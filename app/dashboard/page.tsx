@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   List as ListIcon,
   Moon,
+  Sun,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format, isSameDay, addDays, subDays } from "date-fns"
@@ -214,11 +215,26 @@ export default function DashboardPage() {
             {t("planned_tasks")} <span className="text-slate-400 font-medium">({filteredPrograms.length})</span>
           </h2>
 
+          {/* Bouton manuel Rappel du Matin (accessible aujourd'hui à tout moment) */}
+          {isToday && (
+            <button
+              onClick={() => {
+                setMorningDismissed(false)
+                setShowMorningCard(true)
+              }}
+              className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50 rounded-lg text-amber-600 dark:text-amber-400 transition-all active:scale-95 shadow-sm"
+              title={t("morning_reminder")}
+            >
+              <Sun className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold hidden sm:inline">{t("morning_reminder")}</span>
+            </button>
+          )}
+
           {/* Bouton manuel Bilan du Soir (visible uniquement aujourd'hui si des tâches sont non clôturées) */}
           {isToday && filteredPrograms.some(p => ['EN_OBSERVATION', 'EN_COURS', 'EN_ATTENTE'].includes(p.status)) && (
             <button
               onClick={() => setShowEveningModal(true)}
-              className="flex items-center gap-1 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 transition-all active:scale-95"
+              className="flex items-center gap-1 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 shadow-sm"
               title={t("evening_summary")}
             >
               <Moon className="w-3.5 h-3.5" />
@@ -340,6 +356,17 @@ export default function DashboardPage() {
                                   )}
                                   <PostponeProgramDrawer program={prog} />
                                   <EditProgramDrawer program={prog} />
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(t("confirm_delete"))) {
+                                        deleteProgram(prog.id)
+                                      }
+                                    }}
+                                    className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                    title={t("delete")}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
                             </div>

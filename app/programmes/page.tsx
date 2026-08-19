@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useState, useEffect } from "react"
 import { 
   LayoutGrid, 
@@ -272,6 +272,17 @@ export default function ProgrammesPage() {
                                 )}
                                 <PostponeProgramDrawer program={prog} />
                                 <EditProgramDrawer program={prog} />
+                                <button
+                                  onClick={() => {
+                                    if (confirm(t("confirm_delete"))) {
+                                      deleteProgram(prog.id)
+                                    }
+                                  }}
+                                  className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                  title={t("delete")}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                           </div>
