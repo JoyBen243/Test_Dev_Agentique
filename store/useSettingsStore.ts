@@ -39,7 +39,7 @@ const defaultSettings: Settings = {
   audioEnabled: true,
   language: 'FR',
   theme: 'CLAIR',
-  viewType: 'GRILLE',
+  viewType: 'LISTE',
   morningReminderTime: '05:15',
   eveningSummaryTime: '19:30',
 }

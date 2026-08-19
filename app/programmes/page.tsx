@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useState, useEffect } from "react"
 import { 
   LayoutGrid, 
@@ -29,7 +29,7 @@ export default function ProgrammesPage() {
   const settings = useSettingsStore((state) => state.settings)
   const t = useTranslation(settings.language)
   
-  const [viewMode, setViewMode] = useState<'GRILLE' | 'LISTE'>('GRILLE')
+  const [viewMode, setViewMode] = useState<'GRILLE' | 'LISTE'>('LISTE')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('TOUS')
