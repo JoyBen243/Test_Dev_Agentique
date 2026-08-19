@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Moon, Sun, Volume2, Globe, User, ShieldCheck, ArrowRight, LayoutGrid, List } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -61,22 +61,27 @@ function SettingsContent() {
           </h2>
           
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 space-y-3.5 shadow-sm">
-            {/* Titre */}
+            {/* Titre de civilité adaptatif */}
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1.5">{t("civility_title")}</label>
-              <div className="grid grid-cols-3 gap-2">
-                {['Mr', 'Mme', 'Mlle'].map((tVal) => (
+              <div className={`grid gap-2 ${settings.language === 'FR' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {(settings.language === 'FR'
+                  ? [{ key: 'Mr', label: 'Mr' }, { key: 'Mme', label: 'Mme' }, { key: 'Mlle', label: 'Mlle' }]
+                  : settings.language === 'EN'
+                  ? [{ key: 'Mr', label: 'Mr' }, { key: 'Mme', label: 'Mrs' }]
+                  : [{ key: 'Mr', label: 'Bw' }, { key: 'Mme', label: 'Bi' }]
+                ).map((item) => (
                   <button
-                    key={tVal}
+                    key={item.key}
                     type="button"
-                    onClick={() => updateSetting('title', tVal)}
+                    onClick={() => updateSetting('title', item.key)}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border ${
-                      settings.title === tVal
+                      settings.title === item.key
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
                         : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
                     }`}
                   >
-                    {tVal}
+                    {item.label}
                   </button>
                 ))}
               </div>

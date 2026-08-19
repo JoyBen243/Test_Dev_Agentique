@@ -77,6 +77,7 @@ export const useProgramStore = create<ProgramStore>()(
 
       // Abandonner un programme
       abandonProgram: (id) => {
+        soundManager.playTaskObservationSound()
         set((state) => ({
           programs: state.programs.map((p) => 
             p.id === id ? { ...p, status: 'ABANDONNE', updatedAt: new Date().toISOString() } : p
@@ -86,6 +87,7 @@ export const useProgramStore = create<ProgramStore>()(
 
       // Reporter un programme vers une nouvelle date/heure
       postponeProgram: (id, newStartTime, newEndTime) => {
+        soundManager.playTaskObservationSound()
         const currentProg = get().programs.find((p) => p.id === id)
         if (!currentProg) return
 

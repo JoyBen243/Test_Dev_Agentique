@@ -11,16 +11,18 @@ import {
   Trash2,
   MapPin,
   AlignLeft,
-  Clock
+  Clock,
+  Edit
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format, isSameDay, addDays, subDays } from "date-fns"
 import { fr, enUS } from "date-fns/locale"
 import { CreateProgramDrawer } from "@/components/CreateProgramDrawer"
 import { PostponeProgramDrawer } from "@/components/PostponeProgramDrawer"
+import { EditProgramDrawer } from "@/components/EditProgramDrawer"
 import { useProgramStore } from "@/store/useProgramStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
-import { useTranslation } from "@/lib/i18n"
+import { useTranslation, formatStatusTitleCase, formatLanguageDate } from "@/lib/i18n"
 
 export default function DashboardPage() {
   const settings = useSettingsStore((state) => state.settings)
@@ -35,8 +37,6 @@ export default function DashboardPage() {
   const markAsDone = useProgramStore((state) => state.markAsDone)
   const abandonProgram = useProgramStore((state) => state.abandonProgram)
   const deleteProgram = useProgramStore((state) => state.deleteProgram)
-
-  const dateLocale = settings.language === 'EN' ? enUS : fr
 
   useEffect(() => {
     setMounted(true)
@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
   const getStatusLabel = (status: string) => {
     const key = `status_${status}` as Parameters<typeof t>[0]
-    return t(key) || status
+    return formatStatusTitleCase(t(key) || status)
   }
 
   return (
@@ -72,14 +72,14 @@ export default function DashboardPage() {
       <header className="flex items-center justify-between mb-4 mt-1">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {isToday ? t("today") : format(selectedDate, "EEEE d MMMM", { locale: dateLocale })}
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white capitalize">
+              {isToday ? t("today") : formatLanguageDate(selectedDate, settings.language)}
             </h1>
           </div>
           {mounted ? (
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-slate-500 dark:text-slate-400 font-medium capitalize text-xs sm:text-sm">
-                {format(now, "EEEE d MMMM", { locale: dateLocale })}
+                {formatLanguageDate(now, settings.language)}
               </span>
               <span className="text-indigo-600 dark:text-indigo-400 font-black text-xs sm:text-sm tracking-wider tabular-nums bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md">
                 {format(now, "HH:mm:ss")}
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           <label className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl cursor-pointer hover:border-indigo-500 border border-transparent transition-all shadow-sm">
             <CalendarIcon className="w-4 h-4 text-indigo-500" />
             <span className="text-xs font-bold capitalize text-slate-800 dark:text-slate-200">
-              {format(selectedDate, "dd MMM yyyy", { locale: dateLocale })}
+              {format(selectedDate, "dd MMM yyyy")}
             </span>
             <input
               type="date"
@@ -233,7 +233,8 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                    {/* Statut toujours formaté en majuscule/minuscule */}
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider ${
                       isOngoing ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 animate-pulse' :
                       isDone ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
                       isObservation ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' :
@@ -265,40 +266,50 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {!isDone && !isAbandoned && (
-                    <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+                  {/* Actions (disponibles pour TOUS les programmes, y compris Abandonné/Reporté) */}
+                  <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+                    {!isDone && !isAbandoned && (
                       <button
                         onClick={() => markAsDone(program.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold transition-all active:scale-95"
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold transition-all active:scale-95"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" /> {t("action_mark_done")}
                       </button>
+                    )}
 
+                    {!isDone && !isAbandoned && (
                       <PostponeProgramDrawer program={program} />
+                    )}
 
+                    {!isDone && !isAbandoned && (
                       <button
                         onClick={() => {
                           if (confirm(t("confirm_abandon"))) {
                             abandonProgram(program.id)
                           }
                         }}
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition-all active:scale-95"
+                        className="flex items-center gap-1 px-2 py-1.5 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition-all active:scale-95"
+                        title={t("action_abandon")}
                       >
                         <Ban className="w-3.5 h-3.5" />
                       </button>
+                    )}
 
-                      <button
-                        onClick={() => {
-                          if (confirm(t("confirm_delete"))) {
-                            deleteProgram(program.id)
-                          }
-                        }}
-                        className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+                    {/* Édition illimitée pour TOUTE tâche (même Abandonné / Reporté) */}
+                    <EditProgramDrawer program={program} />
+
+                    <button
+                      onClick={() => {
+                        if (confirm(t("confirm_delete"))) {
+                          deleteProgram(program.id)
+                        }
+                      }}
+                      className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                      title={t("delete")}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
                 </div>
               )

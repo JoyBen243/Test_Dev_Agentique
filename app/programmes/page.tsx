@@ -18,12 +18,12 @@ import {
   Sparkles
 } from "lucide-react"
 import { format, isSameDay, addDays, subDays } from "date-fns"
-import { fr, enUS } from "date-fns/locale"
 import { useProgramStore, Program } from "@/store/useProgramStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
-import { useTranslation } from "@/lib/i18n"
+import { useTranslation, formatStatusTitleCase, formatLanguageDate } from "@/lib/i18n"
 import { CreateProgramDrawer } from "@/components/CreateProgramDrawer"
 import { PostponeProgramDrawer } from "@/components/PostponeProgramDrawer"
+import { EditProgramDrawer } from "@/components/EditProgramDrawer"
 
 export default function ProgrammesPage() {
   const settings = useSettingsStore((state) => state.settings)
@@ -41,9 +41,6 @@ export default function ProgrammesPage() {
   const abandonProgram = useProgramStore((state) => state.abandonProgram)
   const deleteProgram = useProgramStore((state) => state.deleteProgram)
 
-  // Locale date-fns
-  const dateLocale = settings.language === 'EN' ? enUS : fr
-
   useEffect(() => {
     if (settings.viewType === 'LISTE' || settings.viewType === 'GRILLE') {
       setViewMode(settings.viewType as 'GRILLE' | 'LISTE')
@@ -57,7 +54,6 @@ export default function ProgrammesPage() {
     return () => clearInterval(interval)
   }, [refreshStatuses])
 
-  // Filtrage global
   const filteredPrograms = programs.filter(p => {
     const matchesSearch = searchQuery === '' || 
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,7 +66,6 @@ export default function ProgrammesPage() {
     return matchesSearch && matchesStatus && matchesPriority
   })
 
-  // En Mode Grille, on filtre aussi par la date sélectionnée
   const gridPrograms = filteredPrograms.filter(p => isSameDay(new Date(p.startTime), selectedDate))
   gridPrograms.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
@@ -78,13 +73,11 @@ export default function ProgrammesPage() {
   const handleNextDay = () => setSelectedDate(prev => addDays(prev, 1))
   const handleToday = () => setSelectedDate(new Date())
 
-  // Tranches horaires de 05:00 à 23:00 pour la vue Grille
   const hours = Array.from({ length: 19 }, (_, i) => i + 5)
 
-  // Helper pour traduire les statuts
   const getStatusLabel = (status: string) => {
     const key = `status_${status}` as Parameters<typeof t>[0]
-    return t(key) || status
+    return formatStatusTitleCase(t(key) || status)
   }
 
   return (
@@ -101,7 +94,6 @@ export default function ProgrammesPage() {
           </p>
         </div>
 
-        {/* Toggle Mode Grille / Liste */}
         <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
           <button
             onClick={() => setViewMode('GRILLE')}
@@ -127,7 +119,7 @@ export default function ProgrammesPage() {
         </div>
       </header>
 
-      {/* Barre de Recherche et Filtres */}
+      {/* Recherche & Filtres */}
       <div className="space-y-3 mb-5">
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -140,16 +132,15 @@ export default function ProgrammesPage() {
           />
         </div>
 
-        {/* Filtres par Statut */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
           {[
             { id: 'TOUS', label: t("all") },
-            { id: 'EN_ATTENTE', label: t("status_EN_ATTENTE") },
-            { id: 'EN_COURS', label: t("status_EN_COURS") },
-            { id: 'EN_OBSERVATION', label: t("status_EN_OBSERVATION") },
-            { id: 'FAIT', label: t("status_FAIT") },
-            { id: 'REPORTE', label: t("status_REPORTE") },
-            { id: 'ABANDONNE', label: t("status_ABANDONNE") },
+            { id: 'EN_ATTENTE', label: getStatusLabel('EN_ATTENTE') },
+            { id: 'EN_COURS', label: getStatusLabel('EN_COURS') },
+            { id: 'EN_OBSERVATION', label: getStatusLabel('EN_OBSERVATION') },
+            { id: 'FAIT', label: getStatusLabel('FAIT') },
+            { id: 'REPORTE', label: getStatusLabel('REPORTE') },
+            { id: 'ABANDONNE', label: getStatusLabel('ABANDONNE') },
           ].map((st) => (
             <button
               key={st.id}
@@ -166,10 +157,9 @@ export default function ProgrammesPage() {
         </div>
       </div>
 
-      {/* Rendu 1 : MODE GRILLE (VRAIE GRILLE HORAIRE D'EMPLOI DU TEMPS) */}
+      {/* Rendu 1 : MODE GRILLE */}
       {viewMode === 'GRILLE' && (
         <div className="space-y-4">
-          {/* Barre de navigation de date */}
           <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={handlePrevDay}
@@ -182,7 +172,7 @@ export default function ProgrammesPage() {
               <label className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-800 rounded-xl cursor-pointer shadow-sm">
                 <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" />
                 <span className="text-xs font-bold capitalize text-slate-800 dark:text-slate-200">
-                  {format(selectedDate, "EEEE d MMMM yyyy", { locale: dateLocale })}
+                  {formatLanguageDate(selectedDate, settings.language)}
                 </span>
                 <input
                   type="date"
@@ -215,13 +205,10 @@ export default function ProgrammesPage() {
             </button>
           </div>
 
-          {/* Emploi du Temps Structuré en Grille */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm relative overflow-hidden">
             <div className="space-y-0 relative">
               {hours.map((hour) => {
                 const hourStr = String(hour).padStart(2, '0') + ':00'
-                
-                // Trouve les programmes qui tombent dans ce créneau d'heure
                 const matchingPrograms = gridPrograms.filter(p => {
                   const pStart = new Date(p.startTime)
                   return pStart.getHours() === hour
@@ -254,7 +241,7 @@ export default function ProgrammesPage() {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold text-xs sm:text-sm">{prog.title}</span>
-                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                              <span className={`text-[9px] font-black tracking-wider px-2 py-0.5 rounded-md ${
                                 isOngoing ? 'bg-indigo-600 text-white' :
                                 isDone ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300' :
                                 isObservation ? 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300' :
@@ -281,6 +268,7 @@ export default function ProgrammesPage() {
                                   </button>
                                 )}
                                 <PostponeProgramDrawer program={prog} />
+                                <EditProgramDrawer program={prog} />
                               </div>
                             </div>
                           </div>
@@ -346,7 +334,7 @@ export default function ProgrammesPage() {
 
                       <div className="flex-1">
                         <div className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 capitalize mb-0.5">
-                          {format(new Date(program.startTime), 'EEEE d MMMM yyyy', { locale: dateLocale })}
+                          {formatLanguageDate(new Date(program.startTime), settings.language)}
                         </div>
                         <h3 className={`font-bold text-base leading-snug ${isDone || isAbandoned ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
                           {program.title}
@@ -361,7 +349,7 @@ export default function ProgrammesPage() {
                       </div>
                     </div>
 
-                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider ${
                       isOngoing ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 animate-pulse' :
                       isDone ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
                       isObservation ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' :
@@ -373,7 +361,6 @@ export default function ProgrammesPage() {
                     </span>
                   </div>
 
-                  {/* Infos */}
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-[11px]">
                       <Clock className="w-3 h-3 text-indigo-500" />
@@ -394,18 +381,22 @@ export default function ProgrammesPage() {
                     )}
                   </div>
 
-                  {/* Actions */}
-                  {!isDone && !isAbandoned && (
-                    <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+                  {/* Actions (Édition accessible pour TOUS les statuts) */}
+                  <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+                    {!isDone && !isAbandoned && (
                       <button
                         onClick={() => markAsDone(program.id)}
                         className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold transition-all active:scale-95"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" /> {t("action_mark_done")}
                       </button>
+                    )}
 
+                    {!isDone && !isAbandoned && (
                       <PostponeProgramDrawer program={program} />
+                    )}
 
+                    {!isDone && !isAbandoned && (
                       <button
                         onClick={() => {
                           if (confirm(t("confirm_abandon"))) {
@@ -416,19 +407,22 @@ export default function ProgrammesPage() {
                       >
                         <Ban className="w-3.5 h-3.5" />
                       </button>
+                    )}
 
-                      <button
-                        onClick={() => {
-                          if (confirm(t("confirm_delete"))) {
-                            deleteProgram(program.id)
-                          }
-                        }}
-                        className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+                    {/* Éditeur de tâche (Toujours disponible) */}
+                    <EditProgramDrawer program={program} />
+
+                    <button
+                      onClick={() => {
+                        if (confirm(t("confirm_delete"))) {
+                          deleteProgram(program.id)
+                        }
+                      }}
+                      className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               )
             })
