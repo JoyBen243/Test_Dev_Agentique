@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { fetchSettingsAction, updateSettingsAction } from '@/lib/actions/settingsActions'
+import { fetchSettingsClient as fetchSettingsAction, updateSettingsClient as updateSettingsAction } from '@/lib/actions/clientStorage'
 
 export interface Settings {
   id: string

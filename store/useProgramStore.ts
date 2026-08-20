@@ -3,13 +3,13 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { soundManager } from '@/lib/audio'
 import { generateId } from '@/lib/utils'
 import { 
-  fetchProgramsAction, 
-  createProgramAction, 
-  updateProgramAction, 
-  deleteProgramAction, 
-  syncAllProgramsAction,
-  ProgramDto
-} from '@/lib/actions/programActions'
+  fetchProgramsClient as fetchProgramsAction, 
+  createProgramClient as createProgramAction, 
+  updateProgramClient as updateProgramAction, 
+  deleteProgramClient as deleteProgramAction, 
+  syncAllProgramsClient as syncAllProgramsAction,
+} from '@/lib/actions/clientStorage'
+import type { ProgramDto } from '@/lib/actions/programActions'
 
 export interface Program {
   id: string

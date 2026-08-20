@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navigation } from "@/components/Navigation"
+import { AppInitializer } from "@/components/AppInitializer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -33,6 +34,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AppInitializer />
           {/* Conteneur principal mobile-first centré sur grand écran */}
           <div className="flex flex-col min-h-[100dvh]">
             <main className="flex-1 w-full max-w-md mx-auto relative shadow-2xl bg-white dark:bg-slate-950 overflow-x-hidden flex flex-col">
