@@ -24,6 +24,7 @@ import { useTranslation, formatStatusTitleCase, formatLanguageDate } from "@/lib
 import { CreateProgramDrawer } from "@/components/CreateProgramDrawer"
 import { PostponeProgramDrawer } from "@/components/PostponeProgramDrawer"
 import { EditProgramDrawer } from "@/components/EditProgramDrawer"
+import { ConfirmActionModal } from "@/components/ConfirmActionModal"
 
 export default function ProgrammesPage() {
   const settings = useSettingsStore((state) => state.settings)
@@ -35,11 +36,54 @@ export default function ProgrammesPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('TOUS')
   const [selectedPriority, setSelectedPriority] = useState<string>('TOUTES')
 
+  // État de la modal de confirmation
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title?: string
+    message: string
+    confirmText?: string
+    variant: "danger" | "warning"
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    message: "",
+    variant: "danger",
+    onConfirm: () => {},
+  })
+
   const programs = useProgramStore((state) => state.programs)
   const refreshStatuses = useProgramStore((state) => state.refreshStatuses)
   const markAsDone = useProgramStore((state) => state.markAsDone)
   const abandonProgram = useProgramStore((state) => state.abandonProgram)
   const deleteProgram = useProgramStore((state) => state.deleteProgram)
+
+  const openDeleteConfirm = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: t("delete"),
+      message: t("confirm_delete"),
+      confirmText: t("delete"),
+      variant: "danger",
+      onConfirm: () => {
+        deleteProgram(id)
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
+
+  const openAbandonConfirm = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: t("action_abandon"),
+      message: t("confirm_abandon"),
+      confirmText: t("action_abandon"),
+      variant: "warning",
+      onConfirm: () => {
+        abandonProgram(id)
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
 
   const [now, setNow] = useState(new Date())
 
@@ -85,9 +129,15 @@ export default function ProgrammesPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full p-4 sm:p-6 pb-28 max-w-lg mx-auto w-full">
+    <div className="flex flex-col min-h-full p-4 sm:p-6 pb-24 max-w-lg mx-auto w-full">
       
-      {/* En-tête avec Commutateur de Vue */}
+      {/* ⚠️ Boîte de Dialogue de Confirmation Personnalisée */}
+      <ConfirmActionModal
+        {...confirmModal}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* En-tête de la page */}
       <header className="flex items-center justify-between mb-5 mt-1">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
@@ -264,7 +314,6 @@ export default function ProgrammesPage() {
                                 <Clock className="w-3 h-3 text-indigo-500" />
                                 <span>{format(new Date(prog.startTime), 'HH:mm')} - {format(new Date(prog.endTime), 'HH:mm')}</span>
                               </div>
-
                               <div className="flex items-center gap-1 shrink-0 ml-auto">
                                 {canMarkDone && (
                                   <button
@@ -275,14 +324,21 @@ export default function ProgrammesPage() {
                                     <CheckCircle2 className="w-4 h-4" />
                                   </button>
                                 )}
-                                <PostponeProgramDrawer program={prog} />
+                                {!isDone && prog.status !== 'ABANDONNE' && (
+                                  <PostponeProgramDrawer program={prog} />
+                                )}
+                                {!isDone && prog.status !== 'ABANDONNE' && (
+                                  <button
+                                    onClick={() => openAbandonConfirm(prog.id)}
+                                    className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                    title={t("action_abandon")}
+                                  >
+                                    <Ban className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 <EditProgramDrawer program={prog} />
                                 <button
-                                  onClick={() => {
-                                    if (confirm(t("confirm_delete"))) {
-                                      deleteProgram(prog.id)
-                                    }
-                                  }}
+                                  onClick={() => openDeleteConfirm(prog.id)}
                                   className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
                                   title={t("delete")}
                                 >
@@ -419,12 +475,9 @@ export default function ProgrammesPage() {
 
                     {!isDone && !isAbandoned && (
                       <button
-                        onClick={() => {
-                          if (confirm(t("confirm_abandon"))) {
-                            abandonProgram(program.id)
-                          }
-                        }}
+                        onClick={() => openAbandonConfirm(program.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition-all active:scale-95"
+                        title={t("action_abandon")}
                       >
                         <Ban className="w-3.5 h-3.5" />
                       </button>
@@ -433,12 +486,9 @@ export default function ProgrammesPage() {
                     <EditProgramDrawer program={program} />
 
                     <button
-                      onClick={() => {
-                        if (confirm(t("confirm_delete"))) {
-                          deleteProgram(program.id)
-                        }
-                      }}
+                      onClick={() => openDeleteConfirm(program.id)}
                       className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                      title={t("delete")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

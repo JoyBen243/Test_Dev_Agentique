@@ -24,6 +24,7 @@ import { PostponeProgramDrawer } from "@/components/PostponeProgramDrawer"
 import { EditProgramDrawer } from "@/components/EditProgramDrawer"
 import { EveningReviewModal } from "@/components/EveningReviewModal"
 import { MorningSummaryCard } from "@/components/MorningSummaryCard"
+import { ConfirmActionModal } from "@/components/ConfirmActionModal"
 import { useProgramStore } from "@/store/useProgramStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
 import { useTranslation, formatStatusTitleCase, formatLanguageDate } from "@/lib/i18n"
@@ -41,11 +42,54 @@ export default function DashboardPage() {
   const [morningDismissed, setMorningDismissed] = useState(false)
   const [eveningTriggered, setEveningTriggered] = useState(false)
   
+  // État de la modal de confirmation
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title?: string
+    message: string
+    confirmText?: string
+    variant: "danger" | "warning"
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    message: "",
+    variant: "danger",
+    onConfirm: () => {},
+  })
+
   const programs = useProgramStore((state) => state.programs)
   const refreshStatuses = useProgramStore((state) => state.refreshStatuses)
   const markAsDone = useProgramStore((state) => state.markAsDone)
   const abandonProgram = useProgramStore((state) => state.abandonProgram)
   const deleteProgram = useProgramStore((state) => state.deleteProgram)
+
+  const openDeleteConfirm = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: t("delete"),
+      message: t("confirm_delete"),
+      confirmText: t("delete"),
+      variant: "danger",
+      onConfirm: () => {
+        deleteProgram(id)
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
+
+  const openAbandonConfirm = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: t("action_abandon"),
+      message: t("confirm_abandon"),
+      confirmText: t("action_abandon"),
+      variant: "warning",
+      onConfirm: () => {
+        abandonProgram(id)
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+      },
+    })
+  }
 
   // Synchroniser le mode de vue avec le paramètre utilisateur
   useEffect(() => {
@@ -128,6 +172,12 @@ export default function DashboardPage() {
       <EveningReviewModal
         isOpen={showEveningModal}
         onClose={() => setShowEveningModal(false)}
+      />
+
+      {/* ⚠️ Boîte de Dialogue de Confirmation Personnalisée */}
+      <ConfirmActionModal
+        {...confirmModal}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
 
       {/* ☀️ Rappel du Matin (Bannière) */}
@@ -341,14 +391,21 @@ export default function DashboardPage() {
                                       <CheckCircle2 className="w-4 h-4" />
                                     </button>
                                   )}
-                                  <PostponeProgramDrawer program={prog} />
+                                  {!isDone && prog.status !== 'ABANDONNE' && (
+                                    <PostponeProgramDrawer program={prog} />
+                                  )}
+                                  {!isDone && prog.status !== 'ABANDONNE' && (
+                                    <button
+                                      onClick={() => openAbandonConfirm(prog.id)}
+                                      className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
+                                      title={t("action_abandon")}
+                                    >
+                                      <Ban className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                   <EditProgramDrawer program={prog} />
                                   <button
-                                    onClick={() => {
-                                      if (confirm(t("confirm_delete"))) {
-                                        deleteProgram(prog.id)
-                                      }
-                                    }}
+                                    onClick={() => openDeleteConfirm(prog.id)}
                                     className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded transition-colors"
                                     title={t("delete")}
                                   >
@@ -472,12 +529,9 @@ export default function DashboardPage() {
 
                       {!isDone && !isAbandoned && (
                         <button
-                          onClick={() => {
-                            if (confirm(t("confirm_abandon"))) {
-                              abandonProgram(program.id)
-                            }
-                          }}
+                          onClick={() => openAbandonConfirm(program.id)}
                           className="flex items-center gap-1 px-2 py-1.5 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 text-slate-600 hover:text-red-600 rounded-lg text-xs font-bold transition-all active:scale-95"
+                          title={t("action_abandon")}
                         >
                           <Ban className="w-3.5 h-3.5" />
                         </button>
@@ -486,12 +540,9 @@ export default function DashboardPage() {
                       <EditProgramDrawer program={program} />
 
                       <button
-                        onClick={() => {
-                          if (confirm(t("confirm_delete"))) {
-                            deleteProgram(program.id)
-                          }
-                        }}
+                        onClick={() => openDeleteConfirm(program.id)}
                         className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                        title={t("delete")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
