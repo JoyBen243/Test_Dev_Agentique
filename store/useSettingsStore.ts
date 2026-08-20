@@ -7,6 +7,7 @@ export interface Settings {
   tone: string
   title: string
   audioEnabled: boolean
+  beepSound: string
   language: string
   theme: string
   viewType: string
@@ -41,6 +42,7 @@ const defaultSettings: Settings = {
   tone: 'MASCULIN',
   title: 'Mr',
   audioEnabled: true,
+  beepSound: 'MODERNE',
   language: 'FR',
   theme: 'CLAIR',
   viewType: 'LISTE',
@@ -68,6 +70,7 @@ export const useSettingsStore = create<SettingsStore>()(
                 tone: dbSettings.tone,
                 title: dbSettings.title,
                 audioEnabled: dbSettings.audioEnabled,
+                beepSound: dbSettings.beepSound || 'MODERNE',
                 language: dbSettings.language,
                 theme: dbSettings.theme,
                 viewType: dbSettings.viewType,

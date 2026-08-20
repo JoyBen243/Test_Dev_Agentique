@@ -1,9 +1,10 @@
 "use client"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Moon, Sun, Volume2, Globe, User, ShieldCheck, ArrowRight, LayoutGrid, List } from "lucide-react"
+import { Moon, Sun, Volume2, Globe, User, ShieldCheck, ArrowRight, LayoutGrid, List, Play, Bell } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useSettingsStore } from "@/store/useSettingsStore"
 import { useTranslation } from "@/lib/i18n"
+import { soundManager, BeepSoundType } from "@/lib/audio"
 import { Suspense } from "react"
 
 function SettingsContent() {
@@ -211,13 +212,14 @@ function SettingsContent() {
           </div>
         </section>
 
-        {/* Section 4 : Notifications */}
+        {/* Section 4 : Notifications & Sonneries */}
         <section className="space-y-2.5">
           <h2 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
             <Volume2 className="w-4 h-4" /> {t("audio_title")}
           </h2>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 space-y-3.5 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 space-y-4 shadow-sm">
+            {/* Activer / Désactiver tous les sons */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
@@ -237,6 +239,61 @@ function SettingsContent() {
                 <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${settings.audioEnabled ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
               </button>
             </div>
+
+            {/* Note informative sur les alarmes natives du téléphone */}
+            <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl flex items-start gap-2.5">
+              <Bell className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-indigo-950 dark:text-indigo-200 leading-relaxed font-medium">
+                {t("alarms_system_note")}
+              </p>
+            </div>
+
+            {/* Sélection du bip pour les tâches */}
+            {settings.audioEnabled && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  {t("beep_sound_title")}
+                </label>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2">
+                  {t("beep_sound_desc")}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { key: 'DOUX', label: t("beep_doux") },
+                    { key: 'MODERNE', label: t("beep_moderne") },
+                    { key: 'ENERGIQUE', label: t("beep_energique") },
+                    { key: 'SUBTIL', label: t("beep_subtil") },
+                  ].map((item) => (
+                    <div
+                      key={item.key}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                        settings.beepSound === item.key
+                          ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-500 ring-1 ring-indigo-500/20'
+                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => updateSetting('beepSound', item.key)}
+                        className="flex-1 text-left text-xs font-bold text-slate-800 dark:text-slate-200"
+                      >
+                        {item.label}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => soundManager.playBeepPreview(item.key as BeepSoundType)}
+                        className="p-1.5 bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg shadow-sm transition-all active:scale-95 ml-2"
+                        title="Écouter"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Heures de Rappel */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">

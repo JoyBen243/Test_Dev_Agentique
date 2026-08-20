@@ -6,6 +6,7 @@ export interface SettingsDto {
   tone: string
   title: string
   audioEnabled: boolean
+  beepSound: string
   language: string
   theme: string
   viewType: string
@@ -25,6 +26,7 @@ export async function fetchSettingsAction(): Promise<SettingsDto | null> {
           tone: "MASCULIN",
           title: "Mr",
           audioEnabled: true,
+          beepSound: "MODERNE",
           language: "FR",
           theme: "CLAIR",
           viewType: "LISTE",
@@ -39,6 +41,7 @@ export async function fetchSettingsAction(): Promise<SettingsDto | null> {
       tone: settings.tone,
       title: settings.title,
       audioEnabled: settings.audioEnabled,
+      beepSound: (settings as any).beepSound || "MODERNE",
       language: settings.language,
       theme: settings.theme,
       viewType: settings.viewType,
@@ -62,6 +65,7 @@ export async function updateSettingsAction(data: Partial<SettingsDto>) {
         tone: data.tone || "MASCULIN",
         title: data.title || "Mr",
         audioEnabled: data.audioEnabled !== undefined ? data.audioEnabled : true,
+        beepSound: data.beepSound || "MODERNE",
         language: data.language || "FR",
         theme: data.theme || "CLAIR",
         viewType: data.viewType || "LISTE",

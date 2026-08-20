@@ -26,6 +26,7 @@ model Settings {
   tone                String   @default("MASCULIN")
   title               String   @default("Mr")
   audioEnabled        Boolean  @default(true)
+  beepSound           String   @default("MODERNE")
   language            String   @default("FR")
   theme               String   @default("CLAIR")
   viewType            String   @default("LISTE")
